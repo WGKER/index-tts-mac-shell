@@ -1,4 +1,4 @@
-name: Build Mac App 2
+name: Build Mac App 版本01
 on:
   workflow_dispatch:
 
