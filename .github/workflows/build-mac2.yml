@@ -1,0 +1,42 @@
+name: Build Mac App
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout shell code（拉我们这个壳的代码）
+        uses: actions/checkout@v4
+
+      - name: Clone official IndexTTS 官方源码
+        run: |
+          git clone https://github.com/index-tts/index-tts.git index-tts
+          cd index-tts
+          git lfs install
+          git lfs pull
+
+      - name: Setup uv & python
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          source $HOME/.cargo/env
+          cd index-tts
+          uv sync --all-extras --default-index https://mirrors.aliyun.com/pypi/simple
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Electron dependencies
+        run: npm install
+
+      - name: Build Mac arm64 App
+        run: npm run pack
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: IndexTTS-Mac-arm64
+          path: dist/*.app
