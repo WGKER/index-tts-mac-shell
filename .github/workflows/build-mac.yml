@@ -21,7 +21,8 @@ jobs:
           curl -LsSf https://astral.sh/uv/install.sh | sh
           source $HOME/.cargo/env
           cd index-tts
-          uv sync --extra mps --default-index https://mirrors.aliyun.com/pypi/simple
+          # 重点：删掉 --extra mps，直接 uv sync
+          uv sync --default-index https://mirrors.aliyun.com/pypi/simple
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
