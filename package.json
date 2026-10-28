@@ -12,7 +12,7 @@
     "mac": {
       "target": [
         {
-          "target": "dir",
+          "target": "zip",
           "arch": ["arm64"]
         }
       ]
