@@ -7,10 +7,10 @@ jobs:
   build:
     runs-on: macos-latest
     steps:
-      - name: Checkout shell code（拉我们这个壳的代码）
+      - name: Checkout shell code
         uses: actions/checkout@v4
 
-      - name: Clone official IndexTTS 官方源码
+      - name: Clone official IndexTTS
         run: |
           git clone https://github.com/index-tts/index-tts.git index-tts
           cd index-tts
@@ -22,7 +22,8 @@ jobs:
           curl -LsSf https://astral.sh/uv/install.sh | sh
           source $HOME/.cargo/env
           cd index-tts
-          uv sync --all-extras --default-index https://mirrors.aliyun.com/pypi/simple
+          # ========= 重点修改这里：--extra mps，去掉all-extras =========
+          uv sync --extra mps --default-index https://mirrors.aliyun.com/pypi/simple
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
