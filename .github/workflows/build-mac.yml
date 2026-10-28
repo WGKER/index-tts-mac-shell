@@ -1,7 +1,6 @@
 name: Build Mac App
 on:
-  push:
-    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -22,7 +21,6 @@ jobs:
           curl -LsSf https://astral.sh/uv/install.sh | sh
           source $HOME/.cargo/env
           cd index-tts
-          # ========= 重点修改这里：--extra mps，去掉all-extras =========
           uv sync --extra mps --default-index https://mirrors.aliyun.com/pypi/simple
 
       - name: Setup Node.js
