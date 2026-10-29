@@ -1,5 +1,5 @@
 {
-  "name": "index-tts-launcher",
+  "name": "IndexTTS-Launcher",
   "version": "1.0.0",
   "description": "IndexTTS Mac Launcher",
   "author": "WGKER",
@@ -9,6 +9,10 @@
     "pack": "electron-builder --mac --arm64"
   },
   "build": {
+    "asar": true,
+    "asarUnpack": [
+      "index-tts/**/*"
+    ],
     "mac": {
       "target": [
         {
