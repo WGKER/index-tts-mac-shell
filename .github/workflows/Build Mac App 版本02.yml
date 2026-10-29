@@ -9,15 +9,6 @@ jobs:
       - name: Checkout shell code
         uses: actions/checkout@v4
 
-      - name: Download uv binary for apple silicon
-        run: |
-          # 下载 aarch64-apple-darwin 版本 uv
-          curl -LsSf https://github.com/astral-sh/uv/releases/latest/download/uv-aarch64-apple-darwin.tar.gz -o uv.tar.gz
-          tar -zxf uv.tar.gz
-          mv uv-aarch64-apple-darwin/uv .
-          chmod +x ./uv
-          rm -rf uv-aarch64-apple-darwin uv.tar.gz
-
       - name: Clone official IndexTTS
         run: |
           git clone https://github.com/index-tts/index-tts.git index-tts
@@ -25,26 +16,37 @@ jobs:
           git lfs install
           git lfs pull
 
-      - name: Setup uv & python (CI only, for install deps)
+      - name: Setup uv & python
         run: |
           curl -LsSf https://astral.sh/uv/install.sh | sh
           export PATH="$HOME/.local/bin:$PATH"
           cd index-tts
           uv sync --default-index https://mirrors.aliyun.com/pypi/simple
 
+      - name: Download uv binary for apple silicon
+        run: |
+          curl -LsSf https://github.com/astral-sh/uv/releases/latest/download/uv-aarch64-apple-darwin.tar.gz -o uv.tar.gz
+          tar -zxf uv.tar.gz
+          mv uv-aarch64-apple-darwin/uv .
+          chmod +x ./uv
+          ls -la ./uv
+          rm -rf uv-aarch64-apple-darwin uv.tar.gz
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
 
-      - name: Install Electron dependencies
-        run: npm install
+      - name: Install npm dependencies
+        run: |
+          npm install
 
-      - name: Build Mac arm64 App
-        run: npm run pack
+      - name: Build mac app
+        run: |
+          npm run pack
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: IndexTTS-Mac-arm64
+          name: IndexTTS-Launcher-Mac-arm64
           path: dist/*.zip
