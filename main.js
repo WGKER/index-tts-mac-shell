@@ -7,7 +7,7 @@ const fs = require('fs');
 let mainWindow;
 let backendProc = null;
 
-function waitPort(host, port, timeout = 30000) {
+function waitPort(host, port, timeout = 90000) {
   return new Promise((resolve, reject) => {
     const start = Date.now();
     function check() {
@@ -16,7 +16,7 @@ function waitPort(host, port, timeout = 30000) {
       sock.on('connect', () => { sock.destroy(); resolve(true); });
       sock.on('error', () => {
         sock.destroy();
-        if(Date.now() - start > timeout) reject(new Error('Backend timeout 30s'));
+        if(Date.now() - start > timeout) reject(new Error('Backend timeout 90s'));
         else setTimeout(check, 1000);
       });
       sock.connect(port, host);
@@ -26,24 +26,28 @@ function waitPort(host, port, timeout = 30000) {
 }
 
 function startBackend() {
-  const uvPath = path.join(__dirname, '../uv');
-  const cwd = path.join(__dirname, '../index-tts');
+  // 打包后：main.js 在 Resources/app/main.js
+  // venv python 在 Resources/index-tts/.venv/bin/python
+  const resourcesRoot = path.join(__dirname, '..');
+  const pythonPath = path.join(resourcesRoot, 'index-tts', '.venv', 'bin', 'python');
+  const webuiPath = path.join(resourcesRoot, 'index-tts', 'webui.py');
+  const cwd = path.join(resourcesRoot, 'index-tts');
 
-  console.log("uvPath:", uvPath);
+  console.log("pythonPath:", pythonPath);
+  console.log("webuiPath:", webuiPath);
   console.log("cwd:", cwd);
 
-  if (!fs.existsSync(uvPath)) {
-    console.error("❌ uv不存在：", uvPath);
+  if (!fs.existsSync(pythonPath)) {
+    console.error("❌ venv python不存在：", pythonPath);
     return;
   }
-  if (!fs.existsSync(cwd)) {
-    console.error("❌ index-tts目录不存在：", cwd);
+  if (!fs.existsSync(webuiPath)) {
+    console.error("❌ webui.py不存在：", webuiPath);
     return;
   }
 
-  backendProc = spawn(uvPath, [
-    'run',
-    'webui.py',
+  backendProc = spawn(pythonPath, [
+    webuiPath,
     '--fp16',
     '--no-deepspeed',
     '--device',
@@ -75,7 +79,7 @@ async function createWindow() {
   mainWindow.show();
 
   try {
-    await waitPort("127.0.0.1", 7860, 30000);
+    await waitPort("127.0.0.1", 7860, 90000);
     mainWindow.setTitle("INDEX TTS 文字转语音");
     mainWindow.loadURL("http://127.0.0.1:7860");
   } catch (err) {
