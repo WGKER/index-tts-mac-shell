@@ -13,17 +13,11 @@ function waitPort(host, port, timeout = 30000) {
     function check() {
       const sock = new net.Socket();
       sock.setTimeout(800);
-      sock.on('connect', () => {
-        sock.destroy();
-        resolve(true);
-      });
+      sock.on('connect', () => { sock.destroy(); resolve(true); });
       sock.on('error', () => {
         sock.destroy();
-        if (Date.now() - start > timeout) {
-          reject(new Error('Backend timeout 30s'));
-        } else {
-          setTimeout(check, 1000);
-        }
+        if(Date.now() - start > timeout) reject(new Error('Backend timeout 30s'));
+        else setTimeout(check, 1000);
       });
       sock.connect(port, host);
     }
@@ -32,19 +26,8 @@ function waitPort(host, port, timeout = 30000) {
 }
 
 function startBackend() {
-  // uv 放在 asar 内部，路径不变
-  const uvPath = path.join(__dirname, 'uv');
-
-  let cwd;
-  // 判断是否是打包环境：__dirname 包含 app.asar
-  if (__dirname.includes('app.asar')) {
-    // ✅ 打包后：unpacked 目录名字是 app.asar.unpacked
-    const unpackRoot = path.join(path.dirname(__dirname), "app.asar.unpacked");
-    cwd = path.join(unpackRoot, "index-tts");
-  } else {
-    // 本地开发 npm start 环境
-    cwd = path.join(__dirname, "index-tts");
-  }
+  const uvPath = path.join(__dirname, '../uv');
+  const cwd = path.join(__dirname, '../index-tts');
 
   console.log("uvPath:", uvPath);
   console.log("cwd:", cwd);
@@ -87,10 +70,7 @@ async function createWindow() {
     height: 800,
     title: "INDEX TTS 启动中...",
     show: false,
-    webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true
-    }
+    webPreferences: { nodeIntegration: false, contextIsolation: true }
   });
   mainWindow.show();
 
@@ -102,16 +82,11 @@ async function createWindow() {
     console.error("后端启动失败：", err);
     mainWindow.loadURL(`data:text/html;charset=utf-8,
       <h2>后端启动失败/超时</h2>
-      <p>1. 模型放入位置：Contents/Resources/app.asar.unpacked/index-tts/checkpoints</p>
-      <p>2. 确认 uv 权限正常</p>
-      <p>3. 首次启动需要联网下载附属模型</p>
+      <p>模型放置路径：Contents/Resources/index-tts/checkpoints</p>
       <p>日志：${err.message}</p>
     `);
   }
-
-  mainWindow.on('closed', () => {
-    mainWindow = null;
-  });
+  mainWindow.on('closed', () => mainWindow = null);
 }
 
 app.whenReady().then(async () => {
@@ -126,7 +101,6 @@ app.on('window-all-closed', () => {
   if (backendProc) backendProc.kill('SIGTERM');
   if (process.platform !== 'darwin') app.quit();
 });
-
 app.on('quit', () => {
   if (backendProc) backendProc.kill('SIGTERM');
 });
