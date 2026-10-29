@@ -16,21 +16,15 @@ jobs:
           git lfs install
           git lfs pull
 
-      - name: Setup uv & python
+      - name: Setup uv & python (CI预编译venv)
         run: |
           curl -LsSf https://astral.sh/uv/install.sh | sh
           export PATH="$HOME/.local/bin:$PATH"
           cd index-tts
           uv sync --default-index https://mirrors.aliyun.com/pypi/simple
-
-      - name: Download uv binary for apple silicon
-        run: |
-          curl -LsSf https://github.com/astral-sh/uv/releases/latest/download/uv-aarch64-apple-darwin.tar.gz -o uv.tar.gz
-          tar -zxf uv.tar.gz
-          mv uv-aarch64-apple-darwin/uv .
-          chmod +x ./uv
-          ls -la ./uv
-          rm -rf uv-aarch64-apple-darwin uv.tar.gz
+          # 验证venv生成成功
+          ls -la .venv/bin/python
+          .venv/bin/python --version
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -38,20 +32,17 @@ jobs:
           node-version: 22
 
       - name: Install npm dependencies
-        run: |
-          npm install
+        run: npm install
 
-      - name: 打包前校验文件
+      - name: 打包前校验venv
         run: |
-          ls -la
-          echo "--- uv 是否存在 ---"
-          ls -la uv
-          echo "--- index-tts 是否存在 ---"
+          echo "=== index-tts目录 ==="
           ls -la index-tts
+          echo "=== venv python路径 ==="
+          ls -la index-tts/.venv/bin/python
 
       - name: Build mac app
-        run: |
-          npm run pack
+        run: npm run pack
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
