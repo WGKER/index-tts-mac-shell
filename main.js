@@ -2,11 +2,11 @@ const { app, BrowserWindow } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
 const net = require('net');
+const fs = require('fs');
 
 let mainWindow;
 let backendProc = null;
 
-// 等待端口就绪
 function waitPort(host, port, timeout = 30000) {
   return new Promise((resolve, reject) => {
     const start = Date.now();
@@ -32,9 +32,19 @@ function waitPort(host, port, timeout = 30000) {
 }
 
 function startBackend() {
-  // ✅ 关键：包内uv路径，和main.js同级
   const uvPath = path.join(__dirname, 'uv');
-  const cwd = path.join(__dirname, 'index-tts');
+  // 【重点修复】cwd 指向 unpack 出来的真实目录，不在 asar 内部
+  const unpackRoot = path.dirname(__dirname);
+  const cwd = path.join(unpackRoot, "app", "index-tts");
+
+  if (!fs.existsSync(uvPath)) {
+    console.error("❌ uv不存在：", uvPath);
+    return;
+  }
+  if (!fs.existsSync(cwd)) {
+    console.error("❌ index-tts目录不存在：", cwd);
+    return;
+  }
 
   backendProc = spawn(uvPath, [
     'run',
@@ -63,19 +73,28 @@ async function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
-    title: "INDEX TTS 文字转语音",
+    title: "INDEX TTS 启动中...",
+    show: false,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true
     }
   });
+  mainWindow.show();
 
   try {
     await waitPort("127.0.0.1", 7860, 30000);
+    mainWindow.setTitle("INDEX TTS 文字转语音");
     mainWindow.loadURL("http://127.0.0.1:7860");
   } catch (err) {
-    console.error(err);
-    mainWindow.setTitle("后端启动失败");
+    console.error("后端启动失败：", err);
+    mainWindow.loadURL(`data:text/html;charset=utf-8,
+      <h2>后端启动失败/超时</h2>
+      <p>1. 检查模型是否放入 checkpoints</p>
+      <p>2. 确认 uv 权限正常</p>
+      <p>3. 首次启动需要联网下载附属模型</p>
+      <p>日志：${err.message}</p>
+    `);
   }
 
   mainWindow.on('closed', () => {
