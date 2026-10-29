@@ -41,13 +41,12 @@ jobs:
         run: |
           npm install
 
-      - name: Check files before build
+      - name: 打包前校验文件
         run: |
-          echo "=== 当前目录清单 ==="
           ls -la
-          echo "=== uv 信息 ==="
+          echo "--- uv 是否存在 ---"
           ls -la uv
-          echo "=== index-tts 目录 ==="
+          echo "--- index-tts 是否存在 ---"
           ls -la index-tts
 
       - name: Build mac app
