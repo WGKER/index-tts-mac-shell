@@ -41,6 +41,15 @@ jobs:
         run: |
           npm install
 
+      - name: Check files before build
+        run: |
+          echo "=== 当前目录清单 ==="
+          ls -la
+          echo "=== uv 信息 ==="
+          ls -la uv
+          echo "=== index-tts 目录 ==="
+          ls -la index-tts
+
       - name: Build mac app
         run: |
           npm run pack
