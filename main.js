@@ -32,10 +32,22 @@ function waitPort(host, port, timeout = 30000) {
 }
 
 function startBackend() {
+  // uv 放在 asar 内部，路径不变
   const uvPath = path.join(__dirname, 'uv');
-  // 【重点修复】cwd 指向 unpack 出来的真实目录，不在 asar 内部
-  const unpackRoot = path.dirname(__dirname);
-  const cwd = path.join(unpackRoot, "app", "index-tts");
+
+  let cwd;
+  // 判断是否是打包环境：__dirname 包含 app.asar
+  if (__dirname.includes('app.asar')) {
+    // ✅ 打包后：unpacked 目录名字是 app.asar.unpacked
+    const unpackRoot = path.join(path.dirname(__dirname), "app.asar.unpacked");
+    cwd = path.join(unpackRoot, "index-tts");
+  } else {
+    // 本地开发 npm start 环境
+    cwd = path.join(__dirname, "index-tts");
+  }
+
+  console.log("uvPath:", uvPath);
+  console.log("cwd:", cwd);
 
   if (!fs.existsSync(uvPath)) {
     console.error("❌ uv不存在：", uvPath);
@@ -90,7 +102,7 @@ async function createWindow() {
     console.error("后端启动失败：", err);
     mainWindow.loadURL(`data:text/html;charset=utf-8,
       <h2>后端启动失败/超时</h2>
-      <p>1. 检查模型是否放入 checkpoints</p>
+      <p>1. 模型放入位置：Contents/Resources/app.asar.unpacked/index-tts/checkpoints</p>
       <p>2. 确认 uv 权限正常</p>
       <p>3. 首次启动需要联网下载附属模型</p>
       <p>日志：${err.message}</p>
